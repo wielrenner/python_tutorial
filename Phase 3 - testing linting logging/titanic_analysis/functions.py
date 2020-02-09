@@ -1,51 +1,50 @@
-import datetime as dt
-from sklearn.preprocessing import LabelEncoder
-import pandas as pd
-import numpy as np
+def extract_title(df):
+    """
+    Extracts the title out of a name
 
-def timeit(f):
-    def wrapper(df, *args, **kwargs):
-        tic = dt.datetime.now()
-        result = f(df, *args, **kwargs)
-        toc = dt.datetime.now()
-        print(f'{f.__name__} took {toc-tic}')
-        return result
-    return wrapper
+    Arguments:
+        df {Pandas dataframe} -- should contain a Name column
 
-@timeit
-def extract_deck(df):
-    df['deck'] = df['cabin'].str[0]
-    df['deck'].fillna('Z', inplace=True)
+    Returns:
+        df {Pandas dataframe} -- same dataframe except changed Name column content
+    """
+    extraction = {'.*Mrs\..*': 'Mrs',
+                  '.*Sir\..*': 'Royalty',
+                  '.*Mr\..*': 'Mr',
+                  '.*Capt\..*': 'Officer',
+                  '.*Col\..*': 'Officer',
+                  '.*Countess\..*': 'Royalty',
+                  '.*Dona\..*': 'Royalty',
+                  '.*Don\..*': 'Royalty',
+                  '.*Dr\..*': 'Officer',
+                  '.*Jonkheer.*': 'Royalty',
+                  '.*Lady\..*': 'Royalty',
+                  '.*Major\..*': 'Officer',
+                  '.*Master\..*': 'Master',
+                  '.*Mlle\..*': 'Miss',
+                  '.*Mme\..*': 'Mrs',
+                  '.*Ms\..*': 'Mrs',
+                  '.*Rev\..*': 'Officer',
+                  '.*Miss\..*': 'Miss'}
+    df['Name'] = df['Name'].replace(extraction, regex=True)
     return df
 
-@timeit
-def calc_family_size(df):
-    df['family_size'] = df['sibsp'] + df['parch'] + 1
-    
-    bins = [0, 1, 4, 100]
-    group_names = ['singleton', 'small', 'large']
-    df['family_size_cat'] = pd.cut(df['family_size'], bins, labels=group_names)
-    return df
 
-@timeit
-def calc_name_length(df):
-    df['name_length'] = df['name'].apply(lambda x: len(x))
-    
-    bins = [0, 20, 40, 57, 85]
-    group_names = ['short', 'ok', 'good', 'long']
-    df['name_length_cat'] = pd.cut(df['name_length'], bins, labels=group_names)
-    return df
+def fillna_age(df):
+    """
+    Will fill all missing values of the Age column
+    based on the median values of the Age
+    after a groupby on the Name, Pclass, and Sex
 
-@timeit
-def fillna_embarked(df):
-    df['embarked'].fillna('S', inplace=True)
-    return df
+    Arguments:
+        df {Pandas dataframe} -- should contain a Age, Pclass, Name, and Sex column
 
-@timeit
-def label_encode(df):
-    labelEnc = LabelEncoder()
+    Returns:
+        df {Pandas dataframe} -- same dataframe except all missing values of the Age column are filled
+    """
+    age_selection = df[['Age', 'Pclass', 'Name', 'Sex']].dropna()
+    grouped_age = age_selection.groupby(['Name', 'Pclass', 'Sex'])['Age'].median()
 
-    cat_vars = ['embarked', 'sex', 'family_size_cat', 'name_length_cat', 'deck']
-    for col in cat_vars:
-        df[col] = labelEnc.fit_transform(df[col])
+    df['Age'] = df.apply(lambda x: grouped_age.loc[(x['Name'], x['Pclass'], x['Sex'])] if not x['Age'] > 0 else x['Age'],
+                         axis=1)
     return df
