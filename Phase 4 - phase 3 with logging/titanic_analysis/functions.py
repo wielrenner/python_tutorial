@@ -1,3 +1,10 @@
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logging.info("Importing functions")
+
+
 def extract_title(df):
     """
     Extracts the title out of a name
@@ -8,7 +15,7 @@ def extract_title(df):
     Returns:
         df {Pandas dataframe} -- same dataframe except changed Name column content
     """
-    print("Going to extact the title out of the names")
+    logging.info("Going to extact the title out of the names")
     extraction = {'.*Mrs\..*': 'Mrs',
                   '.*Sir\..*': 'Royalty',
                   '.*Mr\..*': 'Mr',
@@ -43,7 +50,7 @@ def fillna_age(df):
     Returns:
         df {Pandas dataframe} -- same dataframe except all missing values of the Age column are filled
     """
-    print("Going to fill all missing values for age")
+    logging.info("Going to fill all missing values for age")
     age_selection = df[['Age', 'Pclass', 'Name', 'Sex']].dropna()
     grouped_age = age_selection.groupby(['Name', 'Pclass', 'Sex'])['Age'].median()
 
