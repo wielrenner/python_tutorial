@@ -14,4 +14,3 @@ def test_fillna_age():
     assert 'Age' in df.columns, 'Age should be in the columns'
     assert df.loc[4, 'Age'] == 1.5, 'Age should be 1.5'
     assert df.loc[5, 'Age'] == 3.5, 'Age should be 3.5'
-
